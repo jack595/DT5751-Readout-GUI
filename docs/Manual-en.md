@@ -1,6 +1,6 @@
 # DT5751 Acquisition and Analysis Manual
 
-DT5751 2.1.17 · Light yield 1.3.5 · © 2026 Xiaojie Luo and ChatGPT
+DT5751 2.1.19 · Light yield 1.3.5 · © 2026 Xiaojie Luo and ChatGPT
 
 ## 1. Install and connect
 
@@ -108,3 +108,24 @@ Open the ROOT output and inspect the `WaveDump` tree. Each entry represents one 
 For per-channel DAT, use the [WaveDump DAT converter](https://github.com/jack595/CAEN_DT5751_ReadoutIntoROOTFile/tree/HEAD/cpp/wavedump_dat) with an aligned channel directory and continuous counters. The legacy TXT reader expects a specific 1029-sample layout; use BIN for the workflow above.
 
 [CAEN DT5751](https://caen.it/products/dt5751/) · [CAEN WaveDump](https://caen.it/products/wavedump/) · [D-WAVE](https://caen.it/products/d-wave/) · [CoMPASS](https://caen.it/product/compass/)
+
+## 10. Counter
+Stop acquisition, connect the board and open Counter. Select a channel or an AND/OR group, pulse polarity and relative thresholds in Settings. Start counting applies these current settings, temporarily uses a short record, and restores the prior hardware configuration at the end. Acquisition and counting share one board connection.
+
+Set the duration (default 10 s), click Start counting, or Stop to finish early. The displayed trigger total covers the interval between the first and last accepted event headers; the first header establishes the reference. Average rate uses the displayed effective hardware time. The requested duration includes boundary waiting, so it can exceed the effective interval. The CSV contains settings, validity, counts, duration and interval rates.
+
+This mode transfers short events and parses counter/timestamp metadata. The hardware is set to count all common triggers, including triggers refused by waveform buffering. No sample decoding, waveform display, PSD processing or raw recording is performed in the counter loop. With OR, overlapping channel requests may merge into one common trigger. The input must return below threshold between positive pulses (above it for negative pulses).
+
+At least two valid headers are required. An interval spanning 0.134217728 s or more between consecutive accepted headers cannot uniquely unwrap the 24-bit counter at the hardware clock bound and invalidates the result. Reset, malformed data or communication errors also invalidate the result. Low-rate measurements with such gaps require an independent counting method.
+
+CH1 negative NIM input at nominal 1 MHz / −800 mV passed three 10 s runs (1,000,004.43, 1,000,004.50 and 1,000,004.45 Hz). A 20 s run counted 20,001,359 triggers over 20.001270672 s (1,000,004.42 Hz), crossing both counter and timestamp rollover. The record length was 7 samples, relative threshold 150 ADC, measured baseline 900 ADC and resolved threshold 750 ADC. ADC range in calibration was 161–918, within the 10-bit range. This verifies this input setup; tests at other frequencies and coincidence configurations remain available for subsequent validation. Use 1 kHz, 10 kHz, 100 kHz, 500 kHz and 1 MHz with known amplitude, width and polarity; repeat 10 s measurements three times. A 1 MHz result is accepted only after comparison with the pulse source, targeting less than 1% error. SIMULATED mode generates a labelled synthetic 1 MHz counter stream and exercises the UI only.
+
+### 10 MHz and coincidence validation
+
+CH1 negative NIM input passed three 10 s measurements at approximately 10.000044 MHz. A 20 s measurement counted 200,032,307 triggers over 20.003142384 s, spanning multiple counter wraps and a timestamp wrap. The record length was 7 samples, baseline target 900 ADC and relative threshold 150 ADC.
+
+Lower-amplitude synchronous negative inputs on CH1 and CH3 were then tested. Baselines were approximately 570 ADC, waveform minima approximately 75 ADC, and threshold-crossing separation approximately 1 ns. Relative thresholds of 124 ADC (CH1) and 123 ADC (CH3) resolved to approximately 446–447 ADC. CH1 alone, CH3 alone, OR and 64 ns AND each measured approximately 10.000044 MHz in 10 s runs.
+
+Moving either participant threshold to 19–20 ADC suppressed continuing AND triggers for 3 s. Only an initial reference header at 168 ns was observed. OR retained approximately 10 MHz from the remaining participant. One reference header produces an insufficient-statistics result with no average rate. Previous hardware settings were restored after each measurement.
+
+To reproduce the configuration, stop counting, enable Acquire and Trigger for CH1/CH3 in Settings, choose negative polarity and the thresholds above, then choose OR or AND with a 64 ns window. Return to Counter and start the measurement. Synchronous OR counts the merged common trigger. Rejection outside the coincidence window requires a separate input-delay test.

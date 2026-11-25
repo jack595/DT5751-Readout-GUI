@@ -6,9 +6,19 @@
 
 **固件要求**　使用 WaveDump 对应的 **D-WAVE 波形记录固件**。CoMPASS 的 DPP 固件（含 DPP-PSD）不兼容。本软件在电脑端计算 PSD。 [CAEN WaveDump](https://caen.it/products/wavedump/) · [CoMPASS](https://caen.it/product/compass/)
 
-[Windows 10/11 x64](https://github.com/jack595/DT5751-Readout-GUI/releases/download/v2.1.17/DT5751_Setup_v2.1.17.exe)　|　[Windows 7 SP1 x64](https://github.com/jack595/DT5751-Readout-GUI/releases/download/v2.1.17/DT5751_Setup_Win7_x64_v2.1.17.exe)　|　[图文手册](docs/Manual-zh.md)　|　[PDF](docs/Manual-zh.pdf)
+[Windows 10/11 x64](https://github.com/jack595/DT5751-Readout-GUI/releases/download/v2.1.19/DT5751_Setup_v2.1.19.exe)　|　[Windows 7 SP1 x64](https://github.com/jack595/DT5751-Readout-GUI/releases/download/v2.1.19/DT5751_Setup_Win7_x64_v2.1.19.exe)　|　[图文手册](docs/Manual-zh.md)　|　[PDF](docs/Manual-zh.pdf)
 
 Win7 需要已有兼容 USB 驱动，安装和 USB 取数仍需在目标机验证。
+
+## 硬件触发计数器
+
+v2.1.19 新增定时计数页，并修复单通道奇数个32位字事件的 USB 读出。默认测量10秒，可选择单通道或 AND/OR 组、设置相对阈值，并导出 CSV。
+
+CH1 负 NIM 输入已通过 1 MHz 和 10 MHz 实测；CH1/CH3 同步输入在单路、OR、64 ns AND 下均测得约10.000044 MHz，阈值抑制对照通过。该频率是本次输入条件下已测到的范围。
+
+![计数页模拟界面，显示1 MHz模拟数据；硬件实测结果见下文及手册。](docs/images/counter-zh.png)
+
+计数页模拟界面，显示1 MHz模拟数据；硬件实测结果见下文及手册。
 
 ## 模拟采集中的四通道波形。
 
@@ -32,6 +42,6 @@ Win7 需要已有兼容 USB 驱动，安装和 USB 取数仍需在目标机验�
 
 记录时选择 **压缩 BIN**。取数结束后，在 Linux 或 WSL 上用独立的 **BinaryFileV2ToROOT** 将单次测量或单个周期的波形和触发时间写入 ROOT。 [转换程序](https://github.com/jack595/CAEN_DT5751_ReadoutIntoROOTFile) · [操作步骤](docs/Manual-zh.md#9-将采集波形转换为-root)
 
-[全部发行版](https://github.com/jack595/DT5751-Readout-GUI/releases) · [SHA-256](https://github.com/jack595/DT5751-Readout-GUI/releases/download/v2.1.17/SHA256SUMS.txt)
+[全部发行版](https://github.com/jack595/DT5751-Readout-GUI/releases) · [SHA-256](https://github.com/jack595/DT5751-Readout-GUI/releases/download/v2.1.19/SHA256SUMS.txt)
 
 © 2026 Xiaojie Luo and ChatGPT
