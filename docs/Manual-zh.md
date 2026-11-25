@@ -85,4 +85,26 @@ PSD 工作区中的通道分析参数。
 
 插件对两组模拟能谱的拟合。
 
+## 9. 将采集波形转换为 ROOT
+
+记录时选择 **压缩 BIN**。取数结束后，在 Linux 或 WSL 上用独立的 **BinaryFileV2ToROOT** 将单次测量或单个周期的波形和触发时间写入 ROOT。 [转换程序](https://github.com/jack595/CAEN_DT5751_ReadoutIntoROOTFile)
+
+安装 Conda 后，首次使用执行以下命令。将最后一行的路径替换为实际输入和新的输出文件名。
+
+```bash
+git clone https://github.com/jack595/CAEN_DT5751_ReadoutIntoROOTFile.git dt5751-tools
+cd dt5751-tools/cpp/dt5751_bin
+CONDA_CHANNEL_PRIORITY=strict conda env create -f environment.yml
+conda activate wavedump-binroot
+make
+make check
+./BinaryFileV2ToROOT "/path/to/run/events.bin.gz" "/path/to/output.root"
+```
+
+也可以传入原始 BIN 文件或包含它的测量目录。请保留同目录的 `capture.json` 供转换器识别时间戳模式。周期测量每个周期单独转换；省略事件数时读取并检查完整数据流。已有输出文件不会被覆盖。
+
+在 ROOT 中打开输出，查看 `WaveDump` 树。每个条目是一个事例，`waveform_chN` 保存物理通道 N 的原始 ADC 样本，`eventCounter` 是原始事例计数，`triggerTimeTag` 单位为硬件时钟刻度，`triggerTime` 单位为微秒。可用 `WaveDump->GetEntries()` 和采集清单中的事例数核对。
+
+对于按通道保存的 DAT，请使用 [WaveDump DAT 转换器](https://github.com/jack595/CAEN_DT5751_ReadoutIntoROOTFile/tree/HEAD/cpp/wavedump_dat)，输入为计数连续、各通道已对齐的目录。仓库中的 TXT 读取器仅适用于旧式 1029 采样点布局，不能作为任意 GUI 文本波形的通用入口。
+
 [CAEN DT5751](https://caen.it/products/dt5751/) · [CAEN WaveDump](https://caen.it/products/wavedump/) · [D-WAVE](https://caen.it/products/d-wave/) · [CoMPASS](https://caen.it/product/compass/)

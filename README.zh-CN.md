@@ -6,7 +6,7 @@
 
 **固件要求**　使用 WaveDump 对应的 **D-WAVE 波形记录固件**。CoMPASS 的 DPP 固件（含 DPP-PSD）不兼容。本软件在电脑端计算 PSD。 [CAEN WaveDump](https://caen.it/products/wavedump/) · [CoMPASS](https://caen.it/product/compass/)
 
-[Windows 10/11 x64](https://github.com/jack595/DT5751-Readout-GUI/releases/download/v2.1.17/DT5751_Setup_v2.1.17.exe)　|　[Windows 7 SP1 x64](https://github.com/jack595/DT5751-Readout-GUI/releases/download/v2.1.17/DT5751_Setup_Win7_x64_v2.1.17.exe)　|　[图文手册](docs/Manual-zh.md)　|　[PDF](https://github.com/jack595/DT5751-Readout-GUI/releases/download/v2.1.17/Manual-zh.pdf)
+[Windows 10/11 x64](https://github.com/jack595/DT5751-Readout-GUI/releases/download/v2.1.17/DT5751_Setup_v2.1.17.exe)　|　[Windows 7 SP1 x64](https://github.com/jack595/DT5751-Readout-GUI/releases/download/v2.1.17/DT5751_Setup_Win7_x64_v2.1.17.exe)　|　[图文手册](docs/Manual-zh.md)　|　[PDF](docs/Manual-zh.pdf)
 
 Win7 需要已有兼容 USB 驱动，安装和 USB 取数仍需在目标机验证。
 
@@ -27,6 +27,10 @@ Win7 需要已有兼容 USB 驱动，安装和 USB 取数仍需在目标机验�
 安装可选光产额插件，比较多个批次、复核高斯拟合并导出结果表和报告。
 
 ![插件对两组模拟能谱的拟合。](docs/images/fits-zh.png)
+
+## 将采集波形转换为 ROOT
+
+记录时选择 **压缩 BIN**。取数结束后，在 Linux 或 WSL 上用独立的 **BinaryFileV2ToROOT** 将单次测量或单个周期的波形和触发时间写入 ROOT。 [转换程序](https://github.com/jack595/CAEN_DT5751_ReadoutIntoROOTFile) · [操作步骤](docs/Manual-zh.md#9-将采集波形转换为-root)
 
 [全部发行版](https://github.com/jack595/DT5751-Readout-GUI/releases) · [SHA-256](https://github.com/jack595/DT5751-Readout-GUI/releases/download/v2.1.17/SHA256SUMS.txt)
 

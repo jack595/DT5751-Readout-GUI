@@ -85,4 +85,26 @@ Inspect both the raw and unit-area mean waveforms aligned by constant-fraction t
 
 Two synthetic spectra fitted by the plugin.
 
+## 9. Convert recorded waveforms to ROOT
+
+Choose **Compressed BIN** when recording. After stopping the run, use **BinaryFileV2ToROOT** on Linux or WSL to write one run or cycle’s waveforms and trigger times to ROOT. [Converter repository](https://github.com/jack595/CAEN_DT5751_ReadoutIntoROOTFile)
+
+Install Conda first. Run the following setup once, then replace the paths on the last line with your recording and a new output filename.
+
+```bash
+git clone https://github.com/jack595/CAEN_DT5751_ReadoutIntoROOTFile.git dt5751-tools
+cd dt5751-tools/cpp/dt5751_bin
+CONDA_CHANNEL_PRIORITY=strict conda env create -f environment.yml
+conda activate wavedump-binroot
+make
+make check
+./BinaryFileV2ToROOT "/path/to/run/events.bin.gz" "/path/to/output.root"
+```
+
+The input can also be an uncompressed BIN file or its run directory. Keep the adjacent `capture.json` for timestamp-mode detection. Convert each cycle separately. Omitting the event limit checks the whole stream. Choose a fresh output filename.
+
+Open the ROOT output and inspect the `WaveDump` tree. Each entry represents one event. `waveform_chN` contains the original ADC samples for physical channel N. `eventCounter` retains the board counter, `triggerTimeTag` is in hardware ticks and `triggerTime` is in microseconds. Compare `WaveDump->GetEntries()` with the recorded event count in the capture manifest.
+
+For per-channel DAT, use the [WaveDump DAT converter](https://github.com/jack595/CAEN_DT5751_ReadoutIntoROOTFile/tree/HEAD/cpp/wavedump_dat) with an aligned channel directory and continuous counters. The legacy TXT reader expects a specific 1029-sample layout; use BIN for the workflow above.
+
 [CAEN DT5751](https://caen.it/products/dt5751/) · [CAEN WaveDump](https://caen.it/products/wavedump/) · [D-WAVE](https://caen.it/products/d-wave/) · [CoMPASS](https://caen.it/product/compass/)
