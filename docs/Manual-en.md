@@ -1,6 +1,6 @@
 # DT5751 Acquisition and Analysis Manual
 
-DT5751 2.1.19 · Light yield 1.3.5 · © 2026 Xiaojie Luo and ChatGPT
+DT5751 2.1.20 · Light yield 1.3.5 · © 2026 Xiaojie Luo and ChatGPT
 
 ## 1. Install and connect
 
@@ -29,6 +29,8 @@ In Settings, **Acquire** selects the waveforms to read. **Trigger** selects the 
 With the board stopped, choose **Positive · rising** or **Negative · falling** to match the input. Measure the baseline in a pulse-free interval. If the waveform needs more headroom, edit the target baseline and apply. Set the relative threshold above the noise excursions and below the pulse amplitude.
 
 For a measured baseline of **600 ADC** and a relative setting of **100 ADC**, the absolute crossing is **700 ADC** for a positive pulse or **500 ADC** for a negative pulse. Apply measures the baseline and programs the resolved threshold. Check **Readback** before starting. A raw DAC value adjusts the analog offset and is not a measured ADC reading.
+
+Editing a target ADC value enables automatic baseline control for that channel. Editing its raw DAC selects manual offset control for that channel. During calibration the application checks complete waveforms and retries an incomplete probe once. If calibration fails, check the channel, target and reported restoration status. Use **Copy diagnostic details** to retain the event length and executable version.
 
 ![Channel settings and board-wide trigger controls.](images/settings-en.png)
 
@@ -110,22 +112,33 @@ For per-channel DAT, use the [WaveDump DAT converter](https://github.com/jack595
 [CAEN DT5751](https://caen.it/products/dt5751/) · [CAEN WaveDump](https://caen.it/products/wavedump/) · [D-WAVE](https://caen.it/products/d-wave/) · [CoMPASS](https://caen.it/product/compass/)
 
 ## 10. Counter
-Stop acquisition, connect the board and open Counter. Select a channel or an AND/OR group, pulse polarity and relative thresholds in Settings. Start counting applies these current settings, temporarily uses a short record, and restores the prior hardware configuration at the end. Acquisition and counting share one board connection.
 
-Set the duration (default 10 s), click Start counting, or Stop to finish early. The displayed trigger total covers the interval between the first and last accepted event headers; the first header establishes the reference. Average rate uses the displayed effective hardware time. The requested duration includes boundary waiting, so it can exceed the effective interval. The CSV contains settings, validity, counts, duration and interval rates.
+### Measure one channel
 
-This mode transfers short events and parses counter/timestamp metadata. The hardware is set to count all common triggers, including triggers refused by waveform buffering. No sample decoding, waveform display, PSD processing or raw recording is performed in the counter loop. With OR, overlapping channel requests may merge into one common trigger. The input must return below threshold between positive pulses (above it for negative pulses).
+1. Stop waveform acquisition or cycle recording and wait for PSD processing to finish. Open **Counter** and click **Connect**, or use the existing connection.
+2. For negative pulses on CH1, select CH1 alone, **OR**, and **Negative pulses**. Enter a positive relative threshold above the baseline noise and below the pulse amplitude. A baseline of 900 ADC and a relative threshold of 150 ADC give a falling-edge threshold of 750 ADC.
+3. To keep the current offset, leave **Auto baseline** off. To set a target, enable it for the channel and enter the target ADC. Polarity applies to all four inputs. Each channel has its own threshold and baseline control. Counter and Settings share these edits.
+4. Set **Duration** to 10 s (the default) and click **Start counting**. The software calibrates and applies the selected conditions. Read the average rate, trigger total and effective time. Click **Stop** to finish early. A normal stop restores the previous hardware configuration.
+5. Click **Export CSV** after the run. The first section records conditions, requested and effective times, mean rate and validity. The second contains elapsed time, cumulative triggers and interval rate. Changing the editor after a run leaves its exported measurement snapshot intact.
 
-At least two valid headers are required. An interval spanning 0.134217728 s or more between consecutive accepted headers cannot uniquely unwrap the 24-bit counter at the hardware clock bound and invalidates the result. Reset, malformed data or communication errors also invalidate the result. Low-rate measurements with such gaps require an independent counting method.
+![Single-channel counter controls and results with a simulated 1 MHz input.](images/counter-en.png)
 
-CH1 negative NIM input at nominal 1 MHz / −800 mV passed three 10 s runs (1,000,004.43, 1,000,004.50 and 1,000,004.45 Hz). A 20 s run counted 20,001,359 triggers over 20.001270672 s (1,000,004.42 Hz), crossing both counter and timestamp rollover. The record length was 7 samples, relative threshold 150 ADC, measured baseline 900 ADC and resolved threshold 750 ADC. ADC range in calibration was 161–918, within the 10-bit range. This verifies this input setup; tests at other frequencies and coincidence configurations remain available for subsequent validation. Use 1 kHz, 10 kHz, 100 kHz, 500 kHz and 1 MHz with known amplitude, width and polarity; repeat 10 s measurements three times. A 1 MHz result is accepted only after comparison with the pulse source, targeting less than 1% error. SIMULATED mode generates a labelled synthetic 1 MHz counter stream and exercises the UI only.
+### Compare OR and AND
 
-### 10 MHz and coincidence validation
+Feed synchronous negative pulses to CH1 and CH3. With OR selected, measure each channel separately to check that both cross threshold. Select both channels and measure OR. Then select **AND**, set **64 ns**, and repeat for the same duration. AND accepts two to four channels on the verified ROC 4.16 / AMC 0.7 waveform firmware. Nominal windows run from 8 to 120 ns in 8 ns steps. OR merges overlapping requests into one common trigger, so synchronous inputs can give the same rate as a single channel.
 
-CH1 negative NIM input passed three 10 s measurements at approximately 10.000044 MHz. A 20 s measurement counted 200,032,307 triggers over 20.003142384 s, spanning multiple counter wraps and a timestamp wrap. The record length was 7 samples, baseline target 900 ADC and relative threshold 150 ADC.
+![CH1 and CH3 selected in Counter with a 64 ns AND window, using a simulated device.](images/and-en.png)
 
-Lower-amplitude synchronous negative inputs on CH1 and CH3 were then tested. Baselines were approximately 570 ADC, waveform minima approximately 75 ADC, and threshold-crossing separation approximately 1 ns. Relative thresholds of 124 ADC (CH1) and 123 ADC (CH3) resolved to approximately 446–447 ADC. CH1 alone, CH3 alone, OR and 64 ns AND each measured approximately 10.000044 MHz in 10 s runs.
+### Interpret the result
 
-Moving either participant threshold to 19–20 ADC suppressed continuing AND triggers for 3 s. Only an initial reference header at 168 ns was observed. OR retained approximately 10 MHz from the remaining participant. One reference header produces an insufficient-statistics result with no average rate. Previous hardware settings were restored after each measurement.
+The counting loop transfers short events, reads the hardware counter and timestamp, and saves no waveforms. The first header establishes the reference. Average rate is the trigger increment divided by hardware time between the first and last valid headers. Effective time may differ slightly from the requested duration. **Readout details** shows how many headers reached the PC. The trigger total can be much larger.
 
-To reproduce the configuration, stop counting, enable Acquire and Trigger for CH1/CH3 in Settings, choose negative polarity and the thresholds above, then choose OR or AND with a 64 ns window. Return to Counter and start the measurement. Synchronous OR counts the merged common trigger. Rejection outside the coincidence window requires a separate input-delay test.
+A dash in the average-rate field means the software lacks a valid rate. For a single header, check the channels individually, the polarity and the AND window. A gap of **134.217728 ms** or more between accepted headers or host samples can make counter rollover ambiguous and invalidates the interval. Sparse inputs can reach this limit.
+
+### Hardware measurements
+
+These external pulser results were obtained with v2.1.19. At nominal 1 MHz with a −800 mV negative NIM input on CH1, the board counted 20,001,359 triggers in 20.001270672 s. At nominal 10 MHz it counted 200,032,307 in 20.003142384 s, about 10.000044 MHz.
+
+For synchronous negative inputs on CH1 and CH3, both baselines were near 570 ADC. Relative thresholds of 124 and 123 ADC gave hardware thresholds near 446–447 ADC. CH1 alone, CH3 alone, OR and 64 ns AND each measured about 10.000044 MHz over 10 s. Inhibiting either channel suppressed continuing AND triggers after the initial reference header. OR retained about 10 MHz from the other channel. These tests cover synchronous inputs and threshold inhibition up to the highest tested input of 10 MHz.
+
+Version 2.1.20 passed 110 automated tests, including short-read recovery on a 1029-sample calibration event and per-channel offset control. Field verification of the revised baseline procedure and installation and USB readout on a target Win7 PC remain pending.
